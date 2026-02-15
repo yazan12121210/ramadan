@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>عداد رمضان </title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&family=Tajawal:wght@300;500;800&display=swap" rel="stylesheet">
+    
+    <style>
+        /* =========================================
+           1. المتغيرات والأساسيات (Root & Reset)
+           ========================================= */
+        :root {
+            --gold: #d4af37;
+            --dark-blue: #0b132b;
+            --deep-purple: #1c2541;
+            --white: #ffffff;
+            --accent: #5bc0be;
+            --glass: rgba(255, 255, 255, 0.08);
+            --transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--dark-blue);
+            color: var(--white);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            background: radial-gradient(circle at center, var(--deep-purple) 0%, var(--dark-blue) 100%);
+        }
+
+        /* =========================================
+           2. الخلفية الديناميكية (Dynamic Stars)
+           ========================================= */
+        #stars-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        /* =========================================
+           3. العناصر الزخرفية (Decorations)
+           ========================================= */
+        .decoration-wrap {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .lantern {
+            position: absolute;
+            width: 60px;
+            filter: drop-shadow(0 0 10px var(--gold));
+            animation: swing 4s infinite ease-in-out;
+            transform-origin: top center;
+        }
+
+        .lantern-1 { left: 5%; top: -10px; }
+        .lantern-2 { right: 5%; top: -10px; }
+        .lantern-3 { left: 15%; top: -10px; display: none; } /* تظهر في الشاشات الكبيرة فقط */
+
+        @keyframes swing {
+            0%, 100% { transform: rotate(6deg); }
+            50% { transform: rotate(-6deg); }
+        }
+
+        /* =========================================
+           4. الحاوية الرئيسية (Main Container)
+           ========================================= */
+        .main-card {
+            position: relative;
+            z-index: 10;
+            width: 90%;
+            max-width: 1100px;
+            padding: 40px 20px;
+            background: var(--glass);
+            backdrop-filter: blur(15px);
+            border-radius: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.4);
+            text-align: center;
+            margin: 20px;
+        }
+
+        .moon-box {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 30px;
+        }
+
+        .moon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            box-shadow: 15px 15px 0 0 var(--gold);
+            transform: rotate(-20deg);
+            animation: float 5s infinite ease-in-out;
+            cursor: pointer;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(-20deg); }
+            50% { transform: translateY(-20px) rotate(-15deg); }
+        }
+
+        h1 {
+            font-family: 'Amiri', serif;
+            font-size: clamp(2rem, 8vw, 4rem); /* حجم خط مرن للموبايل والبيسي */
+            color: var(--gold);
+            margin-bottom: 15px;
+            text-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
+        }
+
+        .subtitle {
+            font-size: clamp(1rem, 4vw, 1.4rem);
+            margin-bottom: 50px;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+
+        /* =========================================
+           5. شبكة العد التنازلي (Countdown Grid)
+           ========================================= */
+        .countdown-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr); /* 4 أعمدة للبيسي */
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .time-unit {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 30px 10px;
+            border-radius: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .time-unit::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: var(--gold);
+            box-shadow: 0 0 15px var(--gold);
+        }
+
+        .time-unit:hover {
+            transform: scale(1.05);
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .val {
+            font-size: clamp(1.8rem, 6vw, 3.5rem);
+            font-weight: 800;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .lbl {
+            font-size: clamp(0.8rem, 3vw, 1.1rem);
+            color: var(--gold);
+            letter-spacing: 1px;
+        }
+
+        /* =========================================
+           6. الميزات الإضافية (Extra Features)
+           ========================================= */
+        .info-footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .hijri-date {
+            color: var(--accent);
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+
+        .progress-container {
+            width: 80%;
+            height: 8px;
+            background: rgba(255,255,255,0.1);
+            margin: 20px auto;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--gold), var(--accent));
+            width: 0%;
+            transition: width 1s ease;
+        }
+
+        /* =========================================
+           7. التوافق مع الشاشات (Media Queries)
+           ========================================= */
+        
+        /* تابلت (iPad) */
+        @media (max-width: 992px) {
+            .main-card { width: 95%; padding: 30px 15px; }
+            .countdown-grid { gap: 15px; }
+            .lantern-3 { display: none; }
+        }
+
+        /* هواتف ذكية (Mobile) */
+        @media (max-width: 600px) {
+            .countdown-grid {
+                grid-template-columns: repeat(2, 1fr); /* تتحول لشبكة 2*2 في الموبايل */
+                gap: 12px;
+            }
+            .main-card {
+                border-radius: 25px;
+                padding: 25px 10px;
+            }
+            .time-unit { padding: 20px 5px; }
+            h1 { margin-bottom: 5px; }
+            .subtitle { margin-bottom: 30px; }
+            .lantern { width: 40px; }
+        }
+
+        /* الهواتف الصغيرة جداً */
+        @media (max-width: 350px) {
+            .countdown-grid { grid-template-columns: 1fr; } /* عمود واحد */
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="stars-canvas"></canvas>
+
+    <div class="decoration-wrap">
+        <svg class="lantern lantern-1" viewBox="0 0 100 150">
+            <path d="M50 10 L30 40 L30 110 L50 140 L70 110 L70 40 Z" fill="none" stroke="#d4af37" stroke-width="3"/>
+            <rect x="45" y="0" width="10" height="20" fill="#d4af37"/>
+            <circle cx="50" cy="75" r="10" fill="#d4af37">
+                <animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite" />
+            </circle>
+        </svg>
+        <svg class="lantern lantern-2" viewBox="0 0 100 150">
+            <path d="M50 10 L30 40 L30 110 L50 140 L70 110 L70 40 Z" fill="none" stroke="#d4af37" stroke-width="3"/>
+            <rect x="45" y="0" width="10" height="20" fill="#d4af37"/>
+            <circle cx="50" cy="75" r="10" fill="#d4af37">
+                <animate attributeName="opacity" values="0.3;1;0.3" dur="1.5s" repeatCount="indefinite" />
+            </circle>
+        </svg>
+    </div>
+
+    <div class="main-card">
+        <div class="moon-box">
+            <div class="moon" id="mainMoon" title="اضغط لتغيير اللون"></div>
+        </div>
+
+        <h1>اللهم بلغنا رمضان</h1>
+        <p class="subtitle">تبقى على شهر الرحمة والمغفرة</p>
+
+        <div class="countdown-grid">
+            <div class="time-unit">
+                <span class="val" id="days">00</span>
+                <span class="lbl">أيام</span>
+            </div>
+            <div class="time-unit">
+                <span class="val" id="hours">00</span>
+                <span class="lbl">ساعات</span>
+            </div>
+            <div class="time-unit">
+                <span class="val" id="minutes">00</span>
+                <span class="lbl">دقائق</span>
+            </div>
+            <div class="time-unit">
+                <span class="val" id="seconds">00</span>
+                <span class="lbl">ثواني</span>
+            </div>
+        </div>
+
+        <div class="info-footer">
+            <div class="hijri-date" id="hijri-display">جاري التحميل...</div>
+            <p>نسبة الانتظار المنقضية:</p>
+            <div class="progress-container">
+                <div class="progress-bar" id="p-bar"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* =========================================
+           8. البرمجة (JavaScript) - منطق متقدم
+           ========================================= */
+
+        // إعداد خلفية النجوم المتحركة باستخدام Canvas
+        const canvas = document.getElementById('stars-canvas');
+        const ctx = canvas.getContext('2d');
+        let stars = [];
+
+        function initCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            stars = [];
+            for(let i=0; i<200; i++) {
+                stars.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    size: Math.random() * 2,
+                    speed: Math.random() * 0.5
+                });
+            }
+        }
+
+        function drawStars() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "white";
+            stars.forEach(star => {
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                ctx.fill();
+                star.y += star.speed;
+                if(star.y > canvas.height) star.y = 0;
+            });
+            requestAnimationFrame(drawStars);
+        }
+
+        // منطق العد التنازلي لرمضان (2026 كمثال)
+        const targetDate = new Date("Feb 18, 2026 00:00:00").getTime();
+        const startDate = new Date("Jan 1, 2026 00:00:00").getTime(); // لبداية شريط التقدم
+
+        function updateTimer() {
+            const now = new Date().getTime();
+            const diff = targetDate - now;
+
+            if (diff <= 0) {
+                document.querySelector('.main-card').innerHTML = "<h1>رمضان مبارك! 🌙</h1>";
+                return;
+            }
+
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const secs = Math.floor((diff % (1000 * 60)) / 1000);
+
+            document.getElementById('days').innerText = days.toString().padStart(2, '0');
+            document.getElementById('hours').innerText = hours.toString().padStart(2, '0');
+            document.getElementById('minutes').innerText = mins.toString().padStart(2, '0');
+            document.getElementById('seconds').innerText = secs.toString().padStart(2, '0');
+
+            // تحديث شريط التقدم
+            const totalRange = targetDate - startDate;
+            const elapsed = now - startDate;
+            const progress = Math.min(Math.max((elapsed / totalRange) * 100, 0), 100);
+            document.getElementById('p-bar').style.width = progress + "%";
+        }
+
+        // جلب التاريخ الهجري
+        function getHijri() {
+            const locale = 'ar-SA-u-ca-islamic-uma';
+            const formatter = new Intl.DateTimeFormat(locale, {day:'numeric', month:'long', year:'numeric'});
+            document.getElementById('hijri-display').innerText = "اليوم: " + formatter.format(new Date());
+        }
+
+        // ميزة تغيير الثيم عند النقر على الهلال
+        let currentTheme = 0;
+        const themes = [
+            { gold: '#d4af37', bg1: '#1c2541', bg2: '#0b132b' },
+            { gold: '#00f2ff', bg1: '#000428', bg2: '#004e92' },
+            { gold: '#ff0055', bg1: '#2b0000', bg2: '#000000' }
+        ];
+
+        document.getElementById('mainMoon').addEventListener('click', () => {
+            currentTheme = (currentTheme + 1) % themes.length;
+            const t = themes[currentTheme];
+            document.documentElement.style.setProperty('--gold', t.gold);
+            document.body.style.background = `radial-gradient(circle at center, ${t.bg1} 0%, ${t.bg2} 100%)`;
+        });
+
+        // تشغيل الوظائف
+        window.addEventListener('resize', initCanvas);
+        initCanvas();
+        drawStars();
+        getHijri();
+        setInterval(updateTimer, 1000);
+        updateTimer();
+
+        console.log("تم تحميل نظام العد التنازلي بنجاح - متوافق مع كافة الأجهزة.");
+    </script>
+</body>
+</html>
